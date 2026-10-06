@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celsius to Fahrenheit | Deep Learning Model</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="page">
+    <section class="panel">
+      <div class="intro">
+        <span class="badge">TensorFlow Neural Network</span>
+        <h1>Celsius to Fahrenheit</h1>
+        <p>
+          Enter a Celsius value. The result is predicted by the final
+          neural-network model from the notebook.
+        </p>
 
+        <div class="model-info">
+          <span>Dense 4 → 4 → 1</span>
+          <span>Adam(0.1)</span>
+          <span>800 epochs</span>
+        </div>
+      </div>
+
+      <div class="converter">
+        <form id="converterForm">
+          <label for="celsius">Celsius temperature</label>
+
+          <div class="input-row">
+            <input
+              id="celsius"
+              name="celsius"
+              type="number"
+              step="any"
+              placeholder="e.g. 37"
+              required
+            >
+            <span class="unit">°C</span>
+          </div>
+
+          <div class="quick-values">
+            <button type="button" class="chip" data-value="0">0°</button>
+            <button type="button" class="chip" data-value="20">20°</button>
+            <button type="button" class="chip" data-value="37">37°</button>
+            <button type="button" class="chip" data-value="100">100°</button>
+          </div>
+
+          <button id="predictBtn" class="primary" type="submit">
+            <span id="buttonText">Predict Fahrenheit</span>
+          </button>
+        </form>
+
+        <p id="message" class="message"></p>
+
+        <div id="result" class="result hidden">
+          <span id="cValue">0 °C</span>
+          <span class="arrow">→</span>
+          <strong id="fValue">32 °F</strong>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      TensorFlow + Flask • Final notebook model
+    </footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("converterForm");
+    const input = document.getElementById("celsius");
+    const result = document.getElementById("result");
+    const cValue = document.getElementById("cValue");
+    const fValue = document.getElementById("fValue");
+    const message = document.getElementById("message");
+    const predictBtn = document.getElementById("predictBtn");
+    const buttonText = document.getElementById("buttonText");
+
+    document.querySelectorAll(".chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        input.value = button.dataset.value;
+        input.focus();
+      });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      message.textContent = "";
+      result.classList.add("hidden");
+      predictBtn.disabled = true;
+      buttonText.textContent = "Predicting...";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({celsius: input.value})
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Prediction failed.");
+        }
+
+        cValue.textContent = `${data.celsius} °C`;
+        fValue.textContent = `${data.fahrenheit} °F`;
+        result.classList.remove("hidden");
+
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        predictBtn.disabled = false;
+        buttonText.textContent = "Predict Fahrenheit";
+      }
+    });
+  </script>
+</body>
+</html>
